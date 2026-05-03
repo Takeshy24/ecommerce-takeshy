@@ -1,8 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
-from typing import List
+from typing import Any, List
+import logging
 import os
 import mercadopago
+
+logger = logging.getLogger(__name__)
 
 from app.database import get_db
 from app.models.cart import Cart
@@ -17,6 +20,63 @@ router = APIRouter(prefix="/orders", tags=["Orders"])
 # Reemplaza con tu Access Token de MercadoPago (Modo Sandbox o Producción)
 MP_ACCESS_TOKEN = os.getenv("MP_ACCESS_TOKEN", "APP_USR-8291479765780216-050122-fae39f501587a0be000d2ff1dd098059-3372300982")
 sdk = mercadopago.SDK(MP_ACCESS_TOKEN)
+
+
+def _strip_env_url(raw: str) -> str:
+    """Evita fallos típicos al pegar URLs en Render/Vercel (comillas, espacios, BOM)."""
+    s = (raw or "").strip().strip("\ufeff")
+    if len(s) >= 2 and s[0] == s[-1] and s[0] in {'"', "'"}:
+        s = s[1:-1].strip()
+    return s.rstrip("/")
+
+
+def _format_mp_error_payload(resp_body: dict[str, Any] | None) -> str:
+    if not isinstance(resp_body, dict):
+        return "Error desconocido de MercadoPago"
+    parts: list[str] = []
+    msg = resp_body.get("message")
+    if isinstance(msg, str):
+        parts.append(msg)
+    for item in resp_body.get("cause") or []:
+        if isinstance(item, dict) and isinstance(item.get("description"), str):
+            parts.append(item["description"])
+        elif isinstance(item, str):
+            parts.append(item)
+    extra = "; ".join(p for p in parts if p)
+    # Compatibilidad si solo hay message anidado
+    return extra if extra else str(resp_body)
+
+
+def _require_https_base_url(env_name: str) -> str:
+    """Mercado Pago rechaza http:// en back_urls (vigente desde mar-2025)."""
+    raw = _strip_env_url(os.getenv(env_name) or "")
+    if not raw:
+        raise HTTPException(
+            status_code=500,
+            detail=(
+                f"Configura {env_name} con la URL pública HTTPS de tu frontend "
+                "(ej. https://tu-app.vercel.app). MP ya no acepta http:// en back_urls."
+            ),
+        )
+    if not raw.lower().startswith("https://"):
+        raise HTTPException(
+            status_code=500,
+            detail=f"{env_name} debe usar https:// — Mercado Pago bloquea HTTP en preferencias.",
+        )
+    return raw
+
+
+def _optional_https_base_url(env_name: str) -> str | None:
+    raw = _strip_env_url(os.getenv(env_name) or "")
+    if not raw:
+        return None
+    if not raw.lower().startswith("https://"):
+        raise HTTPException(
+            status_code=500,
+            detail=f"Si defines {env_name}, debe ser https:// (requerido por Mercado Pago para webhooks).",
+        )
+    return raw
+
 
 @router.post("/checkout", response_model=OrderResponse)
 def create_order(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -52,8 +112,8 @@ def create_order(current_user: User = Depends(get_current_user), db: Session = D
         mp_items.append({
             "id": str(product.id),
             "title": product.name,
-            "quantity": cart_item.quantity,
-            "unit_price": float(product.price),
+            "quantity": int(cart_item.quantity),
+            "unit_price": round(float(product.price), 2),
             "currency_id": "PEN"
         })
 
@@ -77,35 +137,47 @@ def create_order(current_user: User = Depends(get_current_user), db: Session = D
     db.refresh(new_order)
 
     # 5. Crear la Preferencia de Pago en MercadoPago
-    
-    # URL pública base de tu backend (Si usas ngrok reemplaza aquí, ej: "https://tudominio.ngrok.app")
-    # Es necesario para que MercadoPago pueda enviar la notificación del pago.
-    public_url = os.getenv("PUBLIC_URL", "http://localhost:8000")
-    
+    # FRONTEND_PUBLIC_URL: URL HTTPS del sitio (Vercel, etc.). Sin esto MP devuelve error por auto_return/back_urls.
+    # PUBLIC_URL (opcional): URL HTTPS del backend para webhooks; si falta, no se envía notification_url.
+    frontend_base = _require_https_base_url("FRONTEND_PUBLIC_URL")
+    public_backend = _optional_https_base_url("PUBLIC_URL")
+
+    def _join_frontend(path: str) -> str:
+        p = path if path.startswith("/") else f"/{path}"
+        return f"{frontend_base}{p}"
+
+    # auto_return exige validación más estricta de back_urls.success; si MP la rechaza, falla con "auto_return no válido..."
+    auto_return_pref = (_strip_env_url(os.getenv("MP_AUTO_RETURN", "")) or "").lower()
+    use_auto_return = auto_return_pref in ("approved", "1", "true", "yes", "si", "sí")
+
     preference_data = {
         "items": mp_items,
         "payer": {
             "email": current_user.email
         },
         "back_urls": {
-            "success": "http://localhost:4200/orders",
-            "failure": "http://localhost:4200/cart",
-            "pending": "http://localhost:4200/orders"
+            "success": _join_frontend("/orders"),
+            "failure": _join_frontend("/cart"),
+            "pending": _join_frontend("/orders"),
         },
-        "auto_return": "approved",
         "external_reference": str(new_order.id),
-        "notification_url": f"{public_url}/orders/webhook"
     }
+    if use_auto_return:
+        preference_data["auto_return"] = "approved"
+    if public_backend:
+        preference_data["notification_url"] = f"{public_backend}/orders/webhook"
 
     try:
         preference_response = sdk.preference().create(preference_data)
-        
+
         if preference_response.get("status") in [200, 201]:
             preference = preference_response.get("response", {})
-            init_point = preference.get("init_point")
+            init_point = preference.get("init_point") or preference.get("sandbox_init_point")
         else:
             # Si hay un error, lo enviamos al FrontEnd para saber exactamente qué pasó
-            mp_error = preference_response.get("response", {}).get("message", "Error desconocido de MercadoPago")
+            body = preference_response.get("response")
+            mp_error = _format_mp_error_payload(body if isinstance(body, dict) else None)
+            logger.warning("MercadoPago preference error: status=%s body=%s url_success=%s", preference_response.get("status"), body, preference_data.get("back_urls", {}).get("success"))
             raise HTTPException(status_code=400, detail=f"MP Error: {mp_error}")
             
     except Exception as e:
