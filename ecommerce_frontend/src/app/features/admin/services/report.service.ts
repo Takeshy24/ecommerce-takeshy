@@ -2,6 +2,16 @@ import { Injectable } from '@angular/core';
 import { Order } from '../../../shared/models/order.model';
 import { Product } from '../../../shared/models/product.model';
 
+/** Fragmento de HookData de jspdf-autotable para didParseCell (evita implicit any en build estricto). */
+interface AutotableDidParseCellData {
+  section: string;
+  column: { index: number };
+  cell: {
+    raw: unknown;
+    styles: { textColor?: number[]; fontStyle?: string };
+  };
+}
+
 @Injectable({ providedIn: 'root' })
 export class ReportService {
   private readonly storeName = 'Ecommerce Takeshy';
@@ -25,7 +35,7 @@ export class ReportService {
       theme: 'grid',
       styles: { fontSize: 10 },
       headStyles: { fillColor: [25, 118, 210] },
-      didParseCell: (data: any) => {
+      didParseCell: (data: AutotableDidParseCellData) => {
         if (data.section === 'body' && data.column.index === 4) {
           const rawValue = data.cell.raw;
           if (typeof rawValue === 'number' && rawValue <= 5) {
