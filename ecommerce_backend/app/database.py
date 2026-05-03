@@ -2,6 +2,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import os
+from dotenv import load_dotenv
+
+# Cargar variables de entorno desde el archivo .env
+load_dotenv()
 
 # Lee la conexión de la variable de entorno (Render/Neon) o usa local por defecto
 SQLALCHEMY_DATABASE_URL = os.getenv(
