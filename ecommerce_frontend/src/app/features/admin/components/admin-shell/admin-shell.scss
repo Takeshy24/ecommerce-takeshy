@@ -1,0 +1,57 @@
+.admin-container {
+  height: 100vh;
+}
+
+.admin-sidenav {
+  width: 260px;
+  padding: 12px;
+  border-right: 1px solid #d9e4f0;
+}
+
+.brand {
+  margin: 10px 8px 16px;
+}
+
+.brand h2 {
+  margin: 0;
+  font-size: 1.35rem;
+}
+
+.brand p {
+  margin: 4px 0 0;
+  color: #5a6a7d;
+}
+
+.active-link {
+  background: #e9f2ff;
+  border-radius: 8px;
+}
+
+.logout {
+  width: 100%;
+  margin-top: 20px;
+}
+
+.top-toolbar {
+  background: linear-gradient(90deg, #f5faff, #fff9ef);
+  border-bottom: 1px solid #e3ecf6;
+}
+
+.admin-content {
+  padding: 18px;
+}
+
+@media (max-width: 900px) {
+  .admin-container {
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .admin-sidenav {
+    width: 220px;
+  }
+
+  .admin-content {
+    padding: 12px;
+  }
+}

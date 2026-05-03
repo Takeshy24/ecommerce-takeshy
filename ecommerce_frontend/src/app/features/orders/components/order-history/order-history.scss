@@ -1,0 +1,39 @@
+.orders-toolbar {
+  padding: 0 24px;
+  background: linear-gradient(90deg, #f8fff7, #eef7ff);
+}
+
+.orders-card {
+  margin: 20px 24px 28px;
+  overflow-x: auto;
+}
+
+.orders-table {
+  width: 100%;
+}
+
+.order-items-list {
+  margin: 0;
+  padding-left: 16px;
+  list-style-type: square;
+  font-size: 0.9rem;
+}
+
+.orders-state {
+  min-height: 130px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4f5f72;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .orders-toolbar {
+    padding: 0 12px;
+  }
+
+  .orders-card {
+    margin: 14px 12px 20px;
+  }
+}

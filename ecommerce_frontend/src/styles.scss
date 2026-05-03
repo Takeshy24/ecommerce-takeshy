@@ -1,0 +1,100 @@
+// Include theming for Angular Material with `mat.theme()`.
+// This Sass mixin will define CSS variables that are used for styling Angular Material
+// components according to the Material 3 design spec.
+// Learn more about theming and how to use it for your application's
+// custom components at https://material.angular.dev/guide/theming
+@use '@angular/material' as mat;
+
+html {
+  height: 100%;
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$blue-palette,
+        tertiary: mat.$azure-palette,
+      ),
+      typography: 'Inter, sans-serif',
+      density: 0,
+    )
+  );
+}
+
+body {
+  color-scheme: light;
+  background: #f0f4f8; /* Un fondo un poco más frío para que resalte más */
+  color: #0f172a;
+  font-family: 'Inter', sans-serif;
+  margin: 0;
+  height: 100%;
+}
+
+h1, h2, h3, h4, h5, h6, .mat-mdc-card-title {
+  font-family: 'Poppins', sans-serif !important;
+  font-weight: 700 !important;
+}
+
+/* Scrollbar moderno */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #e2e8f0;
+}
+::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* Modificaciones profundas a Angular Material para que NO se vea aburrido */
+.mat-mdc-card {
+  border-radius: 16px !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+  border: 1px solid rgba(255,255,255,0.5);
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(10px);
+}
+
+/* Botones vibrantes */
+.mat-mdc-button, .mat-mdc-unelevated-button, .mat-mdc-raised-button {
+  border-radius: 12px !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.5px !important;
+  padding: 0 24px !important;
+  transition: all 0.3s ease !important;
+}
+
+.mat-mdc-raised-button.mat-primary, .mat-mdc-unelevated-button.mat-primary {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
+  color: white !important;
+  box-shadow: 0 4px 14px 0 rgba(79, 70, 229, 0.39) !important;
+}
+
+.mat-mdc-raised-button.mat-primary:hover, .mat-mdc-unelevated-button.mat-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.5) !important;
+}
+
+.mat-mdc-raised-button.mat-warn, .mat-mdc-unelevated-button.mat-warn {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+  color: white !important;
+  box-shadow: 0 4px 14px 0 rgba(239, 68, 68, 0.39) !important;
+}
+
+/* Campos de formulario modernos */
+.mat-mdc-form-field-flex {
+  background-color: white !important;
+  border-radius: 12px !important;
+}
+.mdc-text-field--outlined .mdc-notched-outline {
+  border-color: #cbd5e1 !important;
+}
+.mdc-text-field--outlined:hover .mdc-notched-outline {
+  border-color: #4f46e5 !important;
+}
+
+/* You can add global styles to this file, and also import other style files */

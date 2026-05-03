@@ -1,0 +1,22 @@
+.header h2 {
+  margin: 0;
+}
+
+.header p {
+  margin: 5px 0 14px;
+  color: #596d83;
+}
+
+.reports-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+mat-card {
+  border: 1px solid #dce7f2;
+}
+
+.full-width {
+  width: 100%;
+}

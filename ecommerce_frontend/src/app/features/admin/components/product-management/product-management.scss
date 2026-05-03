@@ -1,0 +1,32 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.header h2 {
+  margin: 0;
+}
+
+.header p {
+  margin: 4px 0 0;
+  color: #5b6d82;
+}
+
+.table-wrapper {
+  border-radius: 12px;
+  border: 1px solid #dce6f2;
+  overflow: hidden;
+}
+
+.products-table {
+  width: 100%;
+}
+
+.loading {
+  text-align: center;
+  color: #55677d;
+}

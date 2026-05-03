@@ -1,0 +1,31 @@
+<section class="header">
+  <h2>Centro de Reportes PDF</h2>
+  <p>Exporta inventario, resumen de ventas y detalle de pedidos.</p>
+</section>
+
+<div class="reports-grid">
+  <mat-card>
+    <h3>Inventario actual</h3>
+    <p>Incluye productos, categoría, precio y stock.</p>
+    <button mat-flat-button color="primary" (click)="exportInventory()">Exportar PDF</button>
+  </mat-card>
+
+  <mat-card>
+    <h3>Resumen mensual</h3>
+    <p>Consolidado de ingresos y número de pedidos por período.</p>
+    <button mat-flat-button color="accent" (click)="exportMonthlySummary()">Exportar PDF</button>
+  </mat-card>
+
+  <mat-card>
+    <h3>Detalle por pedido</h3>
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Selecciona pedido</mat-label>
+      <mat-select [ngModel]="selectedOrderId()" (ngModelChange)="selectedOrderId.set($event)">
+        <mat-option *ngFor="let order of orders()" [value]="order.id">
+          Pedido #{{ order.id }} - {{ order.status }} - S/ {{ order.total | number: '1.2-2' }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+    <button mat-flat-button color="warn" (click)="exportOrderDetail()">Exportar PDF</button>
+  </mat-card>
+</div>

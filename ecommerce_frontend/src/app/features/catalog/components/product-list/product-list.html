@@ -1,0 +1,154 @@
+<mat-toolbar class="catalog-toolbar">
+  <div class="toolbar-title">
+    <h1>Catálogo</h1>
+    <p>Encuentra productos, filtra por categoría y agrega al carrito.</p>
+  </div>
+
+  <span class="toolbar-spacer"></span>
+
+  <button mat-flat-button class="cart-button" type="button" (click)="toggleCartDrawer()">
+    <mat-icon>shopping_cart</mat-icon>
+    Carrito
+    <span matBadge="{{ totalItemsInCart() }}" matBadgeOverlap="false" matBadgeColor="warn"></span>
+  </button>
+</mat-toolbar>
+
+<mat-drawer-container class="catalog-drawer-container" autosize>
+  <mat-drawer-content>
+    <section class="filters-panel">
+      <mat-form-field appearance="outline">
+        <mat-label>Buscar producto</mat-label>
+        <input
+          matInput
+          [ngModel]="searchTerm()"
+          (ngModelChange)="onSearchChange($event)"
+          placeholder="Nombre o descripción"
+        />
+        <mat-icon matSuffix class="text-gray-400">search</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Filtrar por categoría</mat-label>
+        <mat-select [ngModel]="selectedCategory()" (ngModelChange)="onCategoryChange($event)">
+          <mat-option value="all">Todas</mat-option>
+          <mat-option *ngFor="let category of categories()" [value]="category.id">
+            {{ category.name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </section>
+
+    <section class="state-wrapper" *ngIf="loading()">
+      <mat-spinner diameter="42"></mat-spinner>
+    </section>
+
+    <section class="state-wrapper error" *ngIf="!loading() && errorMessage()">
+      <mat-icon style="margin-right: 8px;">error_outline</mat-icon>
+      {{ errorMessage() }}
+    </section>
+
+    <section class="state-wrapper" *ngIf="!loading() && !errorMessage() && !filteredProducts().length">
+      <mat-icon style="margin-right: 8px; color: #9ca3af;">search_off</mat-icon>
+      No hay productos para el filtro seleccionado.
+    </section>
+
+    <mat-grid-list
+      *ngIf="!loading() && filteredProducts().length"
+      [cols]="gridCols()"
+      [rowHeight]="gridRowHeight()"
+      gutterSize="24px"
+    >
+      <mat-grid-tile *ngFor="let product of filteredProducts()">
+        <mat-card class="product-card">
+          <img
+            mat-card-image
+            [src]="product.image_url || 'https://placehold.co/640x360?text=Producto'"
+            [alt]="product.name"
+          />
+
+          <mat-card-header>
+            <mat-card-title [title]="product.name">{{ product.name }}</mat-card-title>
+            <mat-card-subtitle>{{ getCategoryName(product.category_id) }}</mat-card-subtitle>
+          </mat-card-header>
+
+          <mat-card-content>
+            <p class="description" [title]="product.description">{{ product.description }}</p>
+            <mat-chip-set>
+              <mat-chip [color]="product.stock > 0 ? 'primary' : 'warn'">Stock: {{ product.stock }}</mat-chip>
+            </mat-chip-set>
+          </mat-card-content>
+
+          <mat-card-actions class="card-actions">
+            <span class="price">S/ {{ product.price | number: '1.2-2' }}</span>
+            <button mat-flat-button color="primary" class="add-button" (click)="addToCart(product)">
+              <mat-icon>add_shopping_cart</mat-icon>
+              Agregar
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      </mat-grid-tile>
+    </mat-grid-list>
+  </mat-drawer-content>
+
+  <mat-drawer #cartDrawer class="cart-drawer" position="end" mode="over">
+    <header class="cart-drawer-header">
+      <h2>Mi carrito</h2>
+      <button mat-icon-button type="button" aria-label="Cerrar carrito" (click)="closeCartDrawer()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </header>
+
+    <section class="cart-drawer-body" *ngIf="hasItemsInCart(); else emptyMiniCart">
+      <article class="cart-line" *ngFor="let line of cartLines()">
+        <img [src]="line.imageUrl || 'https://placehold.co/80x80?text=Item'" [alt]="line.name" />
+
+        <div class="line-content">
+          <h3 [title]="line.name">{{ line.name }}</h3>
+          <p>S/ {{ line.unitPrice | number: '1.2-2' }}</p>
+
+          <div class="line-qty">
+            <button mat-icon-button type="button" (click)="decreaseQuantity(line.productId)">
+              <mat-icon>remove</mat-icon>
+            </button>
+            <span>{{ line.quantity }}</span>
+            <button mat-icon-button type="button" (click)="increaseQuantity(line.productId)">
+              <mat-icon>add</mat-icon>
+            </button>
+          </div>
+        </div>
+
+        <button mat-icon-button color="warn" type="button" (click)="removeLine(line.productId)">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </article>
+    </section>
+
+    <ng-template #emptyMiniCart>
+      <section class="empty-mini-cart">
+        <mat-icon>shopping_cart</mat-icon>
+        <p>Tu carrito está vacío.</p>
+      </section>
+    </ng-template>
+
+    <mat-divider></mat-divider>
+
+    <footer class="cart-drawer-summary">
+      <div class="summary-row">
+        <span>Subtotal</span>
+        <strong>S/ {{ cartSubtotal() | number: '1.2-2' }}</strong>
+      </div>
+      <div class="summary-row">
+        <span>IGV</span>
+        <strong>S/ {{ cartTax() | number: '1.2-2' }}</strong>
+      </div>
+      <div class="summary-row total">
+        <span>Total</span>
+        <strong>S/ {{ cartTotal() | number: '1.2-2' }}</strong>
+      </div>
+
+      <a mat-flat-button color="primary" routerLink="/cart" (click)="closeCartDrawer()">
+        Ver carrito completo
+      </a>
+    </footer>
+  </mat-drawer>
+</mat-drawer-container>

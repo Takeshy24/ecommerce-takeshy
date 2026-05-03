@@ -1,0 +1,86 @@
+<section class="loading" *ngIf="loading()">
+  <mat-spinner diameter="48"></mat-spinner>
+</section>
+
+<section *ngIf="!loading()">
+  <div class="dashboard-header">
+    <div>
+      <h2>Resumen en tiempo real</h2>
+      <p class="last-updated" *ngIf="lastUpdated() as updatedAt">
+        <mat-icon>schedule</mat-icon>
+        Última actualización: {{ updatedAt | date: 'dd/MM/yyyy HH:mm:ss' }}
+      </p>
+    </div>
+
+    <button mat-stroked-button color="primary" (click)="refreshNow()" [disabled]="refreshing()" style="border-radius: 8px;">
+      <mat-icon [class.mat-icon-spin]="refreshing()">sync</mat-icon>
+      {{ refreshing() ? 'Actualizando...' : 'Actualizar ahora' }}
+    </button>
+  </div>
+
+  <div class="kpi-grid">
+    <mat-card>
+      <mat-card-content>
+        <div class="kpi-icon-wrapper" style="color: #10b981; background: #d1fae5;">
+          <mat-icon>trending_up</mat-icon>
+        </div>
+        <h3>Ventas del día</h3>
+        <p>S/ {{ metrics().ventas_hoy | number: '1.2-2' }}</p>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card>
+      <mat-card-content>
+        <div class="kpi-icon-wrapper" style="color: #f59e0b; background: #fef3c7;">
+          <mat-icon>local_shipping</mat-icon>
+        </div>
+        <h3>Pedidos pendientes</h3>
+        <p>{{ metrics().pedidos_activos }}</p>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card>
+      <mat-card-content>
+        <div class="kpi-icon-wrapper" style="color: #ef4444; background: #fee2e2;">
+          <mat-icon>warning_amber</mat-icon>
+        </div>
+        <h3>Bajo stock</h3>
+        <p>{{ metrics().productos_bajo_stock }}</p>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card>
+      <mat-card-content>
+        <div class="kpi-icon-wrapper" style="color: #3b82f6; background: #dbeafe;">
+          <mat-icon>account_balance_wallet</mat-icon>
+        </div>
+        <h3>Ingresos mes</h3>
+        <p>S/ {{ metrics().ingresos_mes | number: '1.2-2' }}</p>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <div class="charts-grid">
+    <mat-card class="chart-card">
+      <mat-card-header>
+        <mat-card-title>Ventas por período</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="chart-box">
+          <canvas baseChart [type]="'bar'" [data]="barChartData()" [options]="barChartOptions"></canvas>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="chart-card">
+      <mat-card-header>
+        <mat-card-title>Distribución por categorías</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="chart-box">
+          <canvas baseChart [type]="'pie'" [data]="pieChartData()" [options]="pieChartOptions"></canvas>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</section>
