@@ -99,22 +99,19 @@ def create_order(current_user: User = Depends(get_current_user), db: Session = D
 
     try:
         preference_response = sdk.preference().create(preference_data)
-        preference = preference_response.get("response", {})
         
-        # Si MercadoPago nos da error por un token inválido, lo atrapamos
-        if preference_response.get("status") == 401:
-             print("Error: El Token de MercadoPago es inválido o expiró.")
-             init_point = "https://www.mercadopago.com.pe/checkout/v1/redirect?pref_id=mock-token-invalido" # mockup
+        if preference_response.get("status") in [200, 201]:
+            preference = preference_response.get("response", {})
+            init_point = preference.get("init_point")
         else:
-             init_point = preference.get("sandbox_init_point") or preference.get("init_point")
+            # Si hay un error, lo enviamos al FrontEnd para saber exactamente qué pasó
+            mp_error = preference_response.get("response", {}).get("message", "Error desconocido de MercadoPago")
+            raise HTTPException(status_code=400, detail=f"MP Error: {mp_error}")
+            
     except Exception as e:
-        print("Error al generar mercadopago", e)
-        init_point = None
-
-    if not init_point:
-         print("No se pudo obtener el init_point de MercadoPago. Respuesta:", preference_response)
-         # Como fallback de prueba para el proyecto, redirigimos a una página genérica o dejamos null
-         init_point = "https://www.mercadopago.com.pe/"
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(status_code=400, detail=f"Error al generar mercado pago: {str(e)}")
 
     # Agregamos el enlace al response (ya soportado en el schema)
     from fastapi.encoders import jsonable_encoder
