@@ -38,7 +38,7 @@ export class ReportService {
       didParseCell: (data: AutotableDidParseCellData) => {
         if (data.section === 'body' && data.column.index === 4) {
           const rawValue = data.cell.raw;
-          if (typeof rawValue === 'number' && rawValue <= 5) {
+          if (typeof rawValue === 'number' && rawValue <= 10) {
             data.cell.styles.textColor = [220, 38, 38]; // Rojo
             data.cell.styles.fontStyle = 'bold';
           }
