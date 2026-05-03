@@ -25,7 +25,7 @@ export class ReportService {
       theme: 'grid',
       styles: { fontSize: 10 },
       headStyles: { fillColor: [25, 118, 210] },
-      didParseCell: (data) => {
+      didParseCell: (data: any) => {
         if (data.section === 'body' && data.column.index === 4) {
           const rawValue = data.cell.raw;
           if (typeof rawValue === 'number' && rawValue <= 5) {
