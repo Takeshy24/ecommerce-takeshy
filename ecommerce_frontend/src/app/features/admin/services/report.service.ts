@@ -8,11 +8,11 @@ export class ReportService {
 
   async exportInventory(products: Product[]): Promise<void> {
     const { jsPDF } = await import('jspdf');
-    const { default: autoTable } = await import('jspdf-autotable');
+    await import('jspdf-autotable');
     const doc = new jsPDF();
     this.buildHeader(doc, 'Inventario Actual');
 
-    autoTable(doc, {
+    (doc as any).autoTable({
       startY: 36,
       head: [['ID', 'Producto', 'Categoría', 'Precio', 'Stock']],
       body: products.map((product) => [
@@ -41,7 +41,7 @@ export class ReportService {
 
   async exportMonthlySalesSummary(orders: Order[]): Promise<void> {
     const { jsPDF } = await import('jspdf');
-    const { default: autoTable } = await import('jspdf-autotable');
+    await import('jspdf-autotable');
     const doc = new jsPDF();
     this.buildHeader(doc, 'Resumen de Ventas Mensual');
 
@@ -57,7 +57,7 @@ export class ReportService {
       });
     }
 
-    autoTable(doc, {
+    (doc as any).autoTable({
       startY: 36,
       head: [['Período', 'Pedidos', 'Ingresos']],
       body: [...grouped.entries()].map(([period, values]) => [
@@ -75,11 +75,11 @@ export class ReportService {
 
   async exportOrderDetail(order: Order): Promise<void> {
     const { jsPDF } = await import('jspdf');
-    const { default: autoTable } = await import('jspdf-autotable');
+    await import('jspdf-autotable');
     const doc = new jsPDF();
     this.buildHeader(doc, `Detalle del Pedido #${order.id}`);
 
-    autoTable(doc, {
+    (doc as any).autoTable({
       startY: 46,
       head: [['Producto', 'Cantidad', 'Precio Unitario', 'Subtotal']],
       body: order.items.map((item) => [
